@@ -1,0 +1,147 @@
+# Requests for the API, for the REST Client extension in VS Code.
+#
+# Install "REST Client" by Huachao Mao, start the API with npm start, then
+# click "Send Request" above any request below. Check the status codes, not
+# only the bodies.
+#
+# The logins work from Task 2 on. Before that, the writes need the fixed
+# token from .env: replace {{admin}} below with your API_TOKEN.
+
+@host = http://localhost:3000
+
+
+# ---------------------------------------------------------------------------
+# Task 2: logging in. Send these two first: later requests reuse the tokens.
+
+### the admin: expect 200 and a token
+# @name loginAdmin
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{ "username": "admin", "password": "admin-pw" }
+
+### an instructor: expect 200 and a token
+# @name loginEinstein
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{ "username": "einstein", "password": "einstein-pw" }
+
+###
+@admin = {{loginAdmin.response.body.token}}
+@einstein = {{loginEinstein.response.body.token}}
+
+### a wrong password: expect 401
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{ "username": "admin", "password": "guess" }
+
+
+# ---------------------------------------------------------------------------
+# Reading: open to everybody.
+
+### the collection: expect 200 and { total, limit, offset, items }
+GET {{host}}/instructors
+
+### one department only
+GET {{host}}/instructors?dept=Comp.%20Sci.
+
+### the second page of three: total is still 12
+GET {{host}}/instructors?limit=3&offset=3
+
+### one instructor, without the salary
+GET {{host}}/instructors/22222
+
+### Task 1: the departments, without budgets
+GET {{host}}/departments
+
+### Task 1: one department
+GET {{host}}/departments/Music
+
+### Task 1: no such department: expect 404
+GET {{host}}/departments/Nursing
+
+
+# ---------------------------------------------------------------------------
+# Task 1: hiring, as the admin.
+
+### hire: expect 201, a Location header, and budgetLeft 50000
+POST {{host}}/departments/Music/instructors
+Authorization: Bearer dhuwiuub739bfwiy
+Content-Type: application/json
+
+{ "id": "90100", "name": "Novice", "salary": 30000 }
+
+### the same id again: expect 409
+POST {{host}}/departments/Music/instructors
+Authorization: Bearer dhuwiuub739bfwiy
+Content-Type: application/json
+
+{ "id": "90100", "name": "Novice", "salary": 30000 }
+
+### more than the budget: expect 409, and nothing is stored
+POST {{host}}/departments/Music/instructors
+Authorization: Bearer dhuwiuub739bfwiy
+Content-Type: application/json
+
+{ "id": "90200", "name": "Expensive", "salary": 999999 }
+
+### a bad body: expect 400
+POST {{host}}/departments/Music/instructors
+Authorization: Bearer dhuwiuub739bfwiy
+Content-Type: application/json
+
+{ "name": "Nameless" }
+
+### clean up: expect 204. The budget stays reduced: set it back to 80000
+### by hand, or run npm run check, which does it for you
+DELETE {{host}}/instructors/90100
+Authorization: Bearer dhuwiuub739bfwiy
+
+
+# ---------------------------------------------------------------------------
+# Task 2: the guard.
+
+### no token: expect 401
+PUT {{host}}/instructors/22222
+Content-Type: application/json
+
+{ "salary": 95000 }
+
+### a token that is not ours: expect 401
+PUT {{host}}/instructors/22222
+Authorization: Bearer guess
+Content-Type: application/json
+
+{ "salary": 95000 }
+
+
+# ---------------------------------------------------------------------------
+# Task 3: who may do what.
+
+### Einstein may not change a salary, not even his own: expect 403
+PUT {{host}}/instructors/22222
+Authorization: Bearer {{einstein}}
+Content-Type: application/json
+
+{ "salary": 95000 }
+
+### the admin may: expect 200
+PUT {{host}}/instructors/22222
+Authorization: Bearer dhuwiuub739bfwiy
+Content-Type: application/json
+
+{ "salary": 95000 }
+
+### Einstein's own salary: expect 200
+GET {{host}}/instructors/22222/salary
+Authorization: Bearer {{einstein}}
+
+### Katz's salary, asked by Einstein: expect 403
+GET {{host}}/instructors/45565/salary
+Authorization: Bearer {{einstein}}
+
+### Katz's salary, asked by the admin: expect 200
+GET {{host}}/instructors/45565/salary
+Authorization: Bearer dhuwiuub739bfwiy
