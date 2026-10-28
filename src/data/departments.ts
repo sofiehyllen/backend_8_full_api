@@ -26,8 +26,13 @@ export async function list(): Promise<Department[]> {
 
 /** One department, or undefined when there is no such name. */
 export async function find(deptName: string): Promise<Department | undefined> {
-  // TODO
-  throw new Error('not implemented');
+  const { rows } = await pool.query<Department>(
+    `SELECT dept_name AS "deptName",
+            building,
+            budget::float8
+    FROM department
+    WHERE dept_name = $1`, [deptName]);
+  return rows[0];
 }
 
 /**

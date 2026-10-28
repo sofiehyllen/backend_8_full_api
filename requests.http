@@ -8,6 +8,7 @@
 # token from .env: replace {{admin}} below with your API_TOKEN.
 
 @host = http://localhost:3000
+@admin_token = dhuwiuub739bfwiy (a test token only used for this project)
 
 
 # ---------------------------------------------------------------------------
@@ -68,28 +69,28 @@ GET {{host}}/departments/Nursing
 
 ### hire: expect 201, a Location header, and budgetLeft 50000
 POST {{host}}/departments/Music/instructors
-Authorization: Bearer dhuwiuub739bfwiy
+Authorization: Bearer {{admin_token}}
 Content-Type: application/json
 
 { "id": "90100", "name": "Novice", "salary": 30000 }
 
 ### the same id again: expect 409
 POST {{host}}/departments/Music/instructors
-Authorization: Bearer dhuwiuub739bfwiy
+Authorization: Bearer {{admin_token}}
 Content-Type: application/json
 
 { "id": "90100", "name": "Novice", "salary": 30000 }
 
 ### more than the budget: expect 409, and nothing is stored
 POST {{host}}/departments/Music/instructors
-Authorization: Bearer dhuwiuub739bfwiy
+Authorization: Bearer {{admin_token}}
 Content-Type: application/json
 
 { "id": "90200", "name": "Expensive", "salary": 999999 }
 
 ### a bad body: expect 400
 POST {{host}}/departments/Music/instructors
-Authorization: Bearer dhuwiuub739bfwiy
+Authorization: Bearer {{admin_token}}
 Content-Type: application/json
 
 { "name": "Nameless" }
@@ -97,7 +98,7 @@ Content-Type: application/json
 ### clean up: expect 204. The budget stays reduced: set it back to 80000
 ### by hand, or run npm run check, which does it for you
 DELETE {{host}}/instructors/90100
-Authorization: Bearer dhuwiuub739bfwiy
+Authorization: Bearer {{admin_token}}
 
 
 # ---------------------------------------------------------------------------
@@ -129,7 +130,7 @@ Content-Type: application/json
 
 ### the admin may: expect 200
 PUT {{host}}/instructors/22222
-Authorization: Bearer dhuwiuub739bfwiy
+Authorization: Bearer {{admin_token}}
 Content-Type: application/json
 
 { "salary": 95000 }
@@ -144,4 +145,4 @@ Authorization: Bearer {{einstein}}
 
 ### Katz's salary, asked by the admin: expect 200
 GET {{host}}/instructors/45565/salary
-Authorization: Bearer dhuwiuub739bfwiy
+Authorization: Bearer {{admin_token}}

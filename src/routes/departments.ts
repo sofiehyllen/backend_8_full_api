@@ -27,7 +27,16 @@ departmentsRouter.get('/', async (_req, res, next) => {
 //
 // TODO
 departmentsRouter.get('/:name', async (req, res, next) => {
-  res.status(501).json({ error: 'not implemented' });
+  try {
+    const row = await departments.find(req.params.name);
+    if (row === undefined) {
+      res.status(404).json({ error: `undefined` });
+      return;
+    }
+    res.json(toDepartmentDto(row));
+  } catch (err) {
+    next(err);
+  }
 });
 
 // POST /departments/:name/instructors with { id, name, salary }
